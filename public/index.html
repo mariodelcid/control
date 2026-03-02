@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elotes Locos LLC - Cost Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌽</text></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--card:#1e293b;--card2:#334155;--accent:#f59e0b;--accent2:#eab308;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--text:#f1f5f9;--text2:#94a3b8;--border:#475569}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);padding:1rem 0;position:fixed;top:0;left:0;height:100vh;z-index:10;display:flex;flex-direction:column}
+.sidebar .logo{padding:0.75rem 1.25rem;margin-bottom:1rem;border-bottom:1px solid var(--border)}
+.sidebar .logo h2{font-size:1.1rem;color:var(--accent)}
+.sidebar .logo span{font-size:0.7rem;color:var(--text2)}
+.nav-item{padding:0.7rem 1.25rem;cursor:pointer;display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;color:var(--text2);transition:all .15s;border-left:3px solid transparent}
+.nav-item:hover{background:var(--card2);color:var(--text)}
+.nav-item.active{background:rgba(245,158,11,.1);color:var(--accent);border-left-color:var(--accent)}
+.main{margin-left:220px;flex:1;padding:1.5rem 2rem}
+.page-title{font-size:1.5rem;font-weight:700;margin-bottom:1.25rem}
+.cards-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--card);border-radius:10px;padding:1.1rem;border:1px solid var(--border)}
+.stat-card .label{font-size:0.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px}
+.stat-card .value{font-size:1.5rem;font-weight:700;margin-top:0.25rem}
+.stat-card .sub{font-size:0.75rem;margin-top:0.15rem}
+.positive{color:var(--green)}.negative{color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:0.82rem}
+thead th{text-align:left;padding:0.6rem 0.75rem;background:var(--card2);color:var(--text2);font-weight:600;text-transform:uppercase;font-size:0.7rem;letter-spacing:0.5px;position:sticky;top:0}
+tbody td{padding:0.55rem 0.75rem;border-bottom:1px solid rgba(71,85,105,.3)}
+tbody tr:hover{background:rgba(245,158,11,.05)}
+.table-wrap{background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:auto;max-height:65vh}
+.btn{padding:0.45rem 1rem;border-radius:6px;border:none;cursor:pointer;font-size:0.8rem;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:0.35rem}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{background:var(--accent2)}
+.btn-secondary{background:var(--card2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{opacity:.85}
+.btn-sm{padding:0.3rem 0.65rem;font-size:0.72rem}
+input,select{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:0.45rem 0.65rem;border-radius:6px;font-size:0.82rem;outline:none;transition:border .15s}
+input:focus,select:focus{border-color:var(--accent)}
+input[type="number"]{width:80px}
+.form-row{display:flex;gap:0.75rem;align-items:end;flex-wrap:wrap;margin-bottom:1rem}
+.form-group{display:flex;flex-direction:column;gap:0.25rem}
+.form-group label{font-size:0.72rem;color:var(--text2);font-weight:600;text-transform:uppercase}
+.badge{display:inline-block;padding:0.15rem 0.5rem;border-radius:99px;font-size:0.7rem;font-weight:600}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge-blue{background:rgba(59,130,246,.15);color:var(--blue)}
+.chart-container{background:var(--card);border-radius:10px;border:1px solid var(--border);padding:1rem;margin-bottom:1rem}
+.chart-container h3{font-size:0.85rem;color:var(--text2);margin-bottom:0.75rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.bom-item{display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid rgba(71,85,105,.2)}
+.bom-item:last-child{border-bottom:none}
+.toolbar{display:flex;gap:0.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+.search-input{width:250px}
+.tab-bar{display:flex;gap:0;margin-bottom:1rem;background:var(--card);border-radius:8px;border:1px solid var(--border);overflow:hidden}
+.tab{padding:0.6rem 1.2rem;cursor:pointer;font-size:0.8rem;font-weight:600;color:var(--text2);transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--accent);color:#000}
+.profit-bar{height:6px;border-radius:3px;background:var(--card2);overflow:hidden;width:100%}
+.profit-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.loading{display:flex;align-items:center;justify-content:center;height:50vh;font-size:1.2rem;color:var(--text2)}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--green);color:#fff;padding:0.6rem 1.2rem;border-radius:8px;font-size:0.85rem;font-weight:600;z-index:999;animation:fadeIn .2s}
+.toast.error{background:var(--red)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){.sidebar{width:60px}.sidebar .logo h2,.sidebar .logo span,.nav-label{display:none}.nav-item{justify-content:center;padding:0.7rem}.main{margin-left:60px;padding:1rem}.grid-2{grid-template-columns:1fr}.cards-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback,useMemo}=React;
+
+// ========== API HELPER ==========
+const api={
+  async get(url){const r=await fetch(url);return r.json()},
+  async post(url,data){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});return r.json()},
+  async put(url,data){const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});return r.json()},
+  async del(url){const r=await fetch(url,{method:'DELETE'});return r.json()}
+};
+
+const fmt=n=>'$'+Number(n||0).toFixed(2);
+const fmtPct=n=>(Number(n||0)*100).toFixed(1)+'%';
+
+// ========== TOAST ==========
+let toastTimeout;
+function showToast(msg,isError){
+  const el=document.getElementById('toast');
+  if(!el)return;
+  el.textContent=msg;el.className='toast'+(isError?' error':'');el.style.display='block';
+  clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>{el.style.display='none'},2000);
+}
+
+// ========== APP ==========
+function App(){
+  const[page,setPage]=useState('dashboard');
+  const[ingredients,setIngredients]=useState([]);
+  const[packaging,setPackaging]=useState([]);
+  const[products,setProducts]=useState([]);
+  const[overhead,setOverhead]=useState({rent:0,labor:0,utilities:0,insurance:0});
+  const[sales,setSales]=useState([]);
+  const[loading,setLoading]=useState(true);
+
+  const loadAll=async()=>{
+    try{
+      const[ing,pkg,prod,oh,sl]=await Promise.all([
+        api.get('/api/ingredients'),api.get('/api/packaging'),api.get('/api/products'),
+        api.get('/api/overhead'),api.get('/api/sales')
+      ]);
+      setIngredients(ing);setPackaging(pkg);setProducts(prod);setOverhead(oh);setSales(sl);
+    }catch(e){showToast('Failed to load data',true)}
+    setLoading(false);
+  };
+  useEffect(()=>{loadAll()},[]);
+
+  const totalOverhead=useMemo(()=>Object.values(overhead).reduce((s,v)=>s+(Number(v)||0),0),[overhead]);
+  const totalUnits=useMemo(()=>products.reduce((s,p)=>s+(p.unitsPerMonth||0),0),[products]);
+  const overheadPerUnit=totalUnits>0?totalOverhead/totalUnits:0;
+
+  const calcProduct=useCallback((p)=>{
+    const ingCost=(p.ingredients||[]).reduce((s,i)=>s+(i.qty*i.unitCost),0);
+    const pkgCost=(p.packaging||[]).reduce((s,i)=>s+(i.qty*i.unitCost),0);
+    const totalCost=ingCost+pkgCost+overheadPerUnit;
+    const profit=p.sellPrice-totalCost;
+    const margin=p.sellPrice>0?profit/p.sellPrice:0;
+    return{...p,ingCost,pkgCost,overheadPerUnit,totalCost,profit,margin};
+  },[overheadPerUnit]);
+
+  const enrichedProducts=useMemo(()=>products.map(calcProduct),[products,calcProduct]);
+
+  const pages={dashboard:'\u{1F4CA} Dashboard',products:'\u{1F33D} Products & BOM',ingredients:'\u{1F9C2} Ingredients',packaging:'\u{1F4E6} Packaging',sales:'\u{1F4B0} Sales Entry',overhead:'\u2699\uFE0F Overhead',reports:'\u{1F4CB} Reports'};
+
+  if(loading)return React.createElement('div',{className:'loading'},'Loading Elotes Locos...');
+
+  return React.createElement('div',{className:'app'},
+    React.createElement('div',{id:'toast',className:'toast',style:{display:'none'}}),
+    React.createElement('nav',{className:'sidebar'},
+      React.createElement('div',{className:'logo'},
+        React.createElement('h2',null,'\u{1F33D} Elotes Locos'),
+        React.createElement('span',null,'Cost Manager')
+      ),
+      ...Object.entries(pages).map(([k,v])=>
+        React.createElement('div',{key:k,className:'nav-item'+(page===k?' active':''),onClick:()=>setPage(k)},
+          React.createElement('span',{className:'nav-label'},v)
+        )
+      )
+    ),
+    React.createElement('main',{className:'main'},
+      page==='dashboard'&&React.createElement(Dashboard,{products:enrichedProducts,sales,totalOverhead,totalUnits,overheadPerUnit}),
+      page==='products'&&React.createElement(Products,{products:enrichedProducts,reload:loadAll,ingredients,packaging}),
+      page==='ingredients'&&React.createElement(Ingredients,{ingredients,reload:loadAll}),
+      page==='packaging'&&React.createElement(Packaging,{packaging,reload:loadAll}),
+      page==='sales'&&React.createElement(Sales,{sales,reload:loadAll}),
+      page==='overhead'&&React.createElement(Overhead,{overhead,reload:loadAll,totalOverhead,totalUnits,overheadPerUnit}),
+      page==='reports'&&React.createElement(Reports,{products:enrichedProducts,sales,totalOverhead})
+    )
+  );
+}
+
+// ========== DASHBOARD ==========
+function Dashboard({products,sales,totalOverhead,totalUnits,overheadPerUnit}){
+  const totalRevenue=products.reduce((s,p)=>s+p.sellPrice*p.unitsPerMonth,0);
+  const totalCosts=products.reduce((s,p)=>s+p.totalCost*p.unitsPerMonth,0);
+  const totalProfit=totalRevenue-totalCosts;
+  const avgMargin=totalRevenue>0?totalProfit/totalRevenue:0;
+  const bestProduct=products.length?products.reduce((b,p)=>p.margin>b.margin?p:b,products[0]):null;
+  const chartRef=useRef(null);const chartInst=useRef(null);
+  const chartRef2=useRef(null);const chartInst2=useRef(null);
+
+  useEffect(()=>{
+    if(!chartRef.current||!products.length)return;
+    if(chartInst.current)chartInst.current.destroy();
+    const sorted=[...products].sort((a,b)=>b.margin-a.margin);
+    chartInst.current=new Chart(chartRef.current,{type:'bar',data:{
+      labels:sorted.map(p=>p.name),
+      datasets:[{label:'Margin %',data:sorted.map(p=>p.margin*100),backgroundColor:sorted.map(p=>p.margin>=0?'rgba(34,197,94,.7)':'rgba(239,68,68,.7)'),borderRadius:4}]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'%',color:'#94a3b8'},grid:{color:'rgba(71,85,105,.3)'}},x:{ticks:{color:'#94a3b8',maxRotation:45},grid:{display:false}}}}});
+  },[products]);
+
+  useEffect(()=>{
+    if(!chartRef2.current||!products.length)return;
+    if(chartInst2.current)chartInst2.current.destroy();
+    const sorted=[...products].sort((a,b)=>(b.profit*b.unitsPerMonth)-(a.profit*a.unitsPerMonth));
+    chartInst2.current=new Chart(chartRef2.current,{type:'bar',data:{
+      labels:sorted.map(p=>p.name),
+      datasets:[{label:'Monthly Profit ($)',data:sorted.map(p=>(p.profit*p.unitsPerMonth).toFixed(2)),backgroundColor:'rgba(245,158,11,.7)',borderRadius:4}]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'$'+v,color:'#94a3b8'},grid:{color:'rgba(71,85,105,.3)'}},x:{ticks:{color:'#94a3b8',maxRotation:45},grid:{display:false}}}}});
+  },[products]);
+
+  return React.createElement('div',null,
+    React.createElement('h1',{className:'page-title'},'\u{1F4CA} Dashboard'),
+    React.createElement('div',{className:'cards-row'},
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Monthly Revenue'),React.createElement('div',{className:'value'},fmt(totalRevenue))),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Monthly Profit'),React.createElement('div',{className:'value '+(totalProfit>=0?'positive':'negative')},fmt(totalProfit))),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Avg Margin'),React.createElement('div',{className:'value '+(avgMargin>=0?'positive':'negative')},fmtPct(avgMargin))),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Total Units/Month'),React.createElement('div',{className:'value'},totalUnits.toLocaleString())),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Overhead/Unit'),React.createElement('div',{className:'value'},fmt(overheadPerUnit))),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Best Margin'),bestProduct&&React.createElement('div',{className:'value positive',style:{fontSize:'1rem'}},bestProduct.name),bestProduct&&React.createElement('div',{className:'sub positive'},fmtPct(bestProduct.margin)))
+    ),
+    React.createElement('div',{className:'grid-2'},
+      React.createElement('div',{className:'chart-container'},React.createElement('h3',null,'Profit Margin by Product'),React.createElement('div',{style:{height:'300px'}},React.createElement('canvas',{ref:chartRef}))),
+      React.createElement('div',{className:'chart-container'},React.createElement('h3',null,'Monthly Profit Contribution ($)'),React.createElement('div',{style:{height:'300px'}},React.createElement('canvas',{ref:chartRef2})))
+    ),
+    React.createElement('div',{className:'table-wrap'},
+      React.createElement('table',null,
+        React.createElement('thead',null,React.createElement('tr',null,
+          ...['Product','Sell Price','Ing. Cost','Pkg. Cost','Overhead','Total Cost','Profit','Margin'].map(h=>React.createElement('th',{key:h},h))
+        )),
+        React.createElement('tbody',null,...products.map(p=>
+          React.createElement('tr',{key:p.id},
+            React.createElement('td',{style:{fontWeight:600}},p.name),
+            React.createElement('td',null,fmt(p.sellPrice)),
+            React.createElement('td',null,fmt(p.ingCost)),
+            React.createElement('td',null,fmt(p.pkgCost)),
+            React.createElement('td',null,fmt(p.overheadPerUnit)),
+            React.createElement('td',null,fmt(p.totalCost)),
+            React.createElement('td',{className:p.profit>=0?'positive':'negative'},fmt(p.profit)),
+            React.createElement('td',null,React.createElement('span',{className:'badge '+(p.margin>=0.3?'badge-green':p.margin>=0?'badge-blue':'badge-red')},fmtPct(p.margin)))
+          )
+        ))
+      )
+    )
+  );
+}
+
+// ========== PRODUCTS & BOM ==========
+function Products({products,reload,ingredients,packaging}){
+  const[editing,setEditing]=useState(null);
+  const[search,setSearch]=useState('');
+  const[localProd,setLocalProd]=useState(null);
+  const filtered=products.filter(p=>p.name.toLowerCase().includes(search.toLowerCase()));
+
+  useEffect(()=>{
+    if(editing){const p=products.find(x=>x.id===editing);if(p)setLocalProd(JSON.parse(JSON.stringify(p)))}
+    else setLocalProd(null);
+  },[editing,products]);
+
+  const saveProd=async()=>{
+    if(!localProd)return;
+    await api.put('/api/products/'+localProd.id,{name:localProd.name,sellPrice:localProd.sellPrice,unitsPerMonth:localProd.unitsPerMonth,
+      ingredients:localProd.ingredients.map(i=>({name:i.name,qty:i.qty,unitCost:i.unitCost})),
+      packaging:localProd.packaging.map(p=>({name:p.name,qty:p.qty,unitCost:p.unitCost}))});
+    showToast('Product saved!');await reload();
+  };
+  const addProduct=async()=>{
+    const res=await api.post('/api/products',{name:'New Product',sellPrice:0,unitsPerMonth:0,ingredients:[],packaging:[]});
+    showToast('Product created!');await reload();setEditing(res.id);
+  };
+  const deleteProduct=async(id)=>{
+    if(!confirm('Delete this product?'))return;
+    await api.del('/api/products/'+id);showToast('Product deleted');if(editing===id)setEditing(null);await reload();
+  };
+  const addIngToBom=(ingName)=>{
+    const ing=ingredients.find(i=>i.name===ingName);
+    if(!ing||!localProd)return;
+    setLocalProd(p=>({...p,ingredients:[...p.ingredients,{name:ing.name,qty:1,unitCost:ing.costPerOz}]}));
+  };
+  const addPkgToBom=(pkgName)=>{
+    const pkg=packaging.find(i=>i.name===pkgName);
+    if(!pkg||!localProd)return;
+    setLocalProd(p=>({...p,packaging:[...p.packaging,{name:pkg.name,qty:1,unitCost:pkg.costPerUnit}]}));
+  };
+
+  const ed=localProd;
+  const edCalc=ed?{ingCost:(ed.ingredients||[]).reduce((s,i)=>s+i.qty*i.unitCost,0),pkgCost:(ed.packaging||[]).reduce((s,i)=>s+i.qty*i.unitCost,0)}:null;
+  if(edCalc){edCalc.total=edCalc.ingCost+edCalc.pkgCost+(products[0]?.overheadPerUnit||0);edCalc.profit=ed.sellPrice-edCalc.total;edCalc.margin=ed.sellPrice>0?edCalc.profit/ed.sellPrice:0;edCalc.oh=products[0]?.overheadPerUnit||0}
+
+  return React.createElement('div',null,
+    React.createElement('h1',{className:'page-title'},'\u{1F33D} Products & Bill of Materials'),
+    React.createElement('div',{className:'toolbar'},
+      React.createElement('input',{className:'search-input',placeholder:'Search products...',value:search,onChange:e=>setSearch(e.target.value)}),
+      React.createElement('button',{className:'btn btn-primary',onClick:addProduct},'+ Add Product')
+    ),
+    React.createElement('div',{style:{display:'flex',gap:'1rem'}},
+      React.createElement('div',{className:'table-wrap',style:{flex:1}},
+        React.createElement('table',null,
+          React.createElement('thead',null,React.createElement('tr',null,
+            ...['Product','Price','Ing. Cost','Pkg. Cost','Profit','Margin','Units/Mo',''].map(h=>React.createElement('th',{key:h},h))
+          )),
+          React.createElement('tbody',null,...filtered.map(p=>
+            React.createElement('tr',{key:p.id,style:{cursor:'pointer',background:editing===p.id?'rgba(245,158,11,.1)':''},onClick:()=>setEditing(p.id)},
+              React.createElement('td',{style:{fontWeight:600}},p.name),
+              React.createElement('td',null,fmt(p.sellPrice)),
+              React.createElement('td',null,fmt(p.ingCost)),
+              React.createElement('td',null,fmt(p.pkgCost)),
+              React.createElement('td',{className:p.profit>=0?'positive':'negative'},fmt(p.profit)),
+              React.createElement('td',null,React.createElement('span',{className:'badge '+(p.margin>=0.3?'badge-green':p.margin>=0?'badge-blue':'badge-red')},fmtPct(p.margin))),
+              React.createElement('td',null,p.unitsPerMonth),
+              React.createElement('td',null,React.createElement('button',{className:'btn btn-danger btn-sm',onClick:e=>{e.stopPropagation();deleteProduct(p.id)}},'\u2715'))
+            )
+          ))
+        )
+      ),
+      ed&&React.createElement('div',{style:{width:'380px',background:'var(--card)',borderRadius:'10px',border:'1px solid var(--border)',padding:'1rem',maxHeight:'65vh',overflowY:'auto',flexShrink:0}},
+        React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.75rem'}},
+          React.createElement('h3',{style:{fontSize:'1rem'}},'Edit Product'),
+          React.createElement('button',{className:'btn btn-primary btn-sm',onClick:saveProd},'\u2713 Save')
+        ),
+        React.createElement('div',{className:'form-row'},
+          React.createElement('div',{className:'form-group',style:{flex:1}},React.createElement('label',null,'Name'),React.createElement('input',{value:ed.name,onChange:e=>setLocalProd(p=>({...p,name:e.target.value})),style:{width:'100%'}})),
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'Price'),React.createElement('input',{type:'number',step:'0.01',value:ed.sellPrice,onChange:e=>setLocalProd(p=>({...p,sellPrice:Number(e.target.value)}))})),
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'Units/Mo'),React.createElement('input',{type:'number',value:ed.unitsPerMonth,onChange:e=>setLocalProd(p=>({...p,unitsPerMonth:Number(e.target.value)}))}))
+        ),
+        React.createElement('h4',{style:{fontSize:'0.8rem',color:'var(--accent)',marginBottom:'0.5rem'}},'INGREDIENTS'),
+        ...(ed.ingredients||[]).map((ing,idx)=>
+          React.createElement('div',{key:idx,className:'bom-item'},
+            React.createElement('span',{style:{flex:1,fontSize:'0.8rem'}},ing.name),
+            React.createElement('input',{type:'number',step:'0.01',value:ing.qty,onChange:e=>{const v=Number(e.target.value);setLocalProd(p=>({...p,ingredients:p.ingredients.map((x,i)=>i===idx?{...x,qty:v}:x)}))},style:{width:'60px'}}),
+            React.createElement('span',{style:{fontSize:'0.75rem',color:'var(--text2)',width:'55px',textAlign:'right'}},fmt(ing.qty*ing.unitCost)),
+            React.createElement('button',{className:'btn btn-danger btn-sm',onClick:()=>setLocalProd(p=>({...p,ingredients:p.ingredients.filter((_,i)=>i!==idx)}))},'\u2715')
+          )
+        ),
+        React.createElement('div',{style:{marginTop:'0.5rem',display:'flex',gap:'0.5rem'}},
+          React.createElement('select',{id:'addIng',defaultValue:'',style:{flex:1,fontSize:'0.75rem'}},
+            React.createElement('option',{value:'',disabled:true},'+ Add ingredient...'),
+            ...ingredients.map(i=>React.createElement('option',{key:i.code,value:i.name},i.name+' ('+fmt(i.costPerOz)+'/oz)'))
+          ),
+          React.createElement('button',{className:'btn btn-secondary btn-sm',onClick:()=>{const s=document.getElementById('addIng');if(s.value){addIngToBom(s.value);s.value=''}}},'Add')
+        ),
+        React.createElement('h4',{style:{fontSize:'0.8rem',color:'var(--accent)',marginBottom:'0.5rem',marginTop:'1rem'}},'PACKAGING'),
+        ...(ed.packaging||[]).map((pkg,idx)=>
+          React.createElement('div',{key:idx,className:'bom-item'},
+            React.createElement('span',{style:{flex:1,fontSize:'0.8rem'}},pkg.name),
+            React.createElement('span',{style:{fontSize:'0.75rem',color:'var(--text2)'}},fmt(pkg.qty*pkg.unitCost)),
+            React.createElement('button',{className:'btn btn-danger btn-sm',onClick:()=>setLocalProd(p=>({...p,packaging:p.packaging.filter((_,i)=>i!==idx)}))},'\u2715')
+          )
+        ),
+        React.createElement('div',{style:{marginTop:'0.5rem',display:'flex',gap:'0.5rem'}},
+          React.createElement('select',{id:'addPkg',defaultValue:'',style:{flex:1,fontSize:'0.75rem'}},
+            React.createElement('option',{value:'',disabled:true},'+ Add packaging...'),
+            ...packaging.map(p=>React.createElement('option',{key:p.code,value:p.name},p.name+' ('+fmt(p.costPerUnit)+')'))
+          ),
+          React.createElement('button',{className:'btn btn-secondary btn-sm',onClick:()=>{const s=document.getElementById('addPkg');if(s.value){addPkgToBom(s.value);s.value=''}}},'Add')
+        ),
+        edCalc&&React.createElement('div',{style:{marginTop:'1rem',padding:'0.75rem',background:'var(--card2)',borderRadius:'8px',fontSize:'0.8rem'}},
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between'}},React.createElement('span',null,'Ingredient Cost:'),React.createElement('span',null,fmt(edCalc.ingCost))),
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between'}},React.createElement('span',null,'Packaging Cost:'),React.createElement('span',null,fmt(edCalc.pkgCost))),
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between'}},React.createElement('span',null,'Overhead:'),React.createElement('span',null,fmt(edCalc.oh))),
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontWeight:700,marginTop:'0.25rem',paddingTop:'0.25rem',borderTop:'1px solid var(--border)'}},React.createElement('span',null,'Total Cost:'),React.createElement('span',null,fmt(edCalc.total))),
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontWeight:700,color:edCalc.profit>=0?'var(--green)':'var(--red)'}},React.createElement('span',null,'Profit:'),React.createElement('span',null,fmt(edCalc.profit))),
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between'}},React.createElement('span',null,'Margin:'),React.createElement('span',{className:'badge '+(edCalc.margin>=0.3?'badge-green':edCalc.margin>=0?'badge-blue':'badge-red')},fmtPct(edCalc.margin)))
+        )
+      )
+    )
+  );
+}
+
+// ========== INGREDIENTS ==========
+function Ingredients({ingredients,reload}){
+  const[search,setSearch]=useState('');
+  const filtered=ingredients.filter(i=>i.name.toLowerCase().includes(search.toLowerCase()));
+  const debounce=useRef({});
+
+  const update=(code,field,val)=>{
+    clearTimeout(debounce.current[code]);
+    debounce.current[code]=setTimeout(async()=>{
+      const ing=ingredients.find(i=>i.code===code);
+      if(!ing)return;
+      const data={name:ing.name,costPerUnit:ing.costPerUnit,ozInUnit:ing.ozInUnit,[field]:field==='name'?val:Number(val)};
+      await api.put('/api/ingredients/'+code,data);reload();
+    },500);
+  };
+  const add=async()=>{
+    const newCode=Math.max(0,...ingredients.map(i=>i.code))+1;
+    await api.post('/api/ingredients',{code:newCode,name:'New Ingredient',costPerUnit:0,ozInUnit:1});
+    showToast('Ingredient added!');reload();
+  };
+  const remove=async(code)=>{if(!confirm('Delete?'))return;await api.del('/api/ingredients/'+code);showToast('Deleted');reload()};
+
+  return React.createElement('div',null,
+    React.createElement('h1',{className:'page-title'},'\u{1F9C2} Ingredients Master'),
+    React.createElement('div',{className:'toolbar'},
+      React.createElement('input',{className:'search-input',placeholder:'Search ingredients...',value:search,onChange:e=>setSearch(e.target.value)}),
+      React.createElement('button',{className:'btn btn-primary',onClick:add},'+ Add Ingredient'),
+      React.createElement('span',{style:{color:'var(--text2)',fontSize:'0.8rem'}},ingredients.length+' items')
+    ),
+    React.createElement('div',{className:'table-wrap'},
+      React.createElement('table',null,
+        React.createElement('thead',null,React.createElement('tr',null,
+          ...['Code','Name','Cost/Unit ($)','Oz in Unit','Cost/Oz ($)',''].map(h=>React.createElement('th',{key:h},h))
+        )),
+        React.createElement('tbody',null,...filtered.map(i=>
+          React.createElement('tr',{key:i.code},
+            React.createElement('td',null,i.code),
+            React.createElement('td',null,React.createElement('input',{defaultValue:i.name,onBlur:e=>update(i.code,'name',e.target.value),style:{width:'180px',background:'transparent',border:'1px solid transparent',color:'var(--text)'},onFocus:e=>e.target.style.borderColor='var(--accent)',onBlurCapture:e=>e.target.style.borderColor='transparent'})),
+            React.createElement('td',null,React.createElement('input',{type:'number',step:'0.01',defaultValue:i.costPerUnit,onBlur:e=>update(i.code,'costPerUnit',e.target.value)})),
+            React.createElement('td',null,React.createElement('input',{type:'number',step:'0.1',defaultValue:i.ozInUnit,onBlur:e=>update(i.code,'ozInUnit',e.target.value)})),
+            React.createElement('td',{style:{color:'var(--accent)',fontWeight:600}},fmt(i.costPerOz)),
+            React.createElement('td',null,React.createElement('button',{className:'btn btn-danger btn-sm',onClick:()=>remove(i.code)},'\u2715'))
+          )
+        ))
+      )
+    )
+  );
+}
+
+// ========== PACKAGING ==========
+function Packaging({packaging,reload}){
+  const[search,setSearch]=useState('');
+  const filtered=packaging.filter(i=>i.name.toLowerCase().includes(search.toLowerCase()));
+  const debounce=useRef({});
+
+  const update=(code,field,val)=>{
+    clearTimeout(debounce.current[code]);
+    debounce.current[code]=setTimeout(async()=>{
+      const pkg=packaging.find(i=>i.code===code);
+      if(!pkg)return;
+      const data={name:pkg.name,costPerCase:pkg.costPerCase,unitsInCase:pkg.unitsInCase,[field]:field==='name'?val:Number(val)};
+      await api.put('/api/packaging/'+code,data);reload();
+    },500);
+  };
+  const add=async()=>{
+    const newCode=Math.max(0,...packaging.map(i=>i.code))+1;
+    await api.post('/api/packaging',{code:newCode,name:'New Packaging',costPerCase:0,unitsInCase:1});
+    showToast('Packaging added!');reload();
+  };
+  const remove=async(code)=>{if(!confirm('Delete?'))return;await api.del('/api/packaging/'+code);showToast('Deleted');reload()};
+
+  return React.createElement('div',null,
+    React.createElement('h1',{className:'page-title'},'\u{1F4E6} Packaging Master'),
+    React.createElement('div',{className:'toolbar'},
+      React.createElement('input',{className:'search-input',placeholder:'Search packaging...',value:search,onChange:e=>setSearch(e.target.value)}),
+      React.createElement('button',{className:'btn btn-primary',onClick:add},'+ Add Packaging'),
+      React.createElement('span',{style:{color:'var(--text2)',fontSize:'0.8rem'}},packaging.length+' items')
+    ),
+    React.createElement('div',{className:'table-wrap'},
+      React.createElement('table',null,
+        React.createElement('thead',null,React.createElement('tr',null,
+          ...['Code','Name','Cost/Case ($)','Units/Case','Cost/Unit ($)',''].map(h=>React.createElement('th',{key:h},h))
+        )),
+        React.createElement('tbody',null,...filtered.map(i=>
+          React.createElement('tr',{key:i.code},
+            React.createElement('td',null,i.code),
+            React.createElement('td',null,React.createElement('input',{defaultValue:i.name,onBlur:e=>update(i.code,'name',e.target.value),style:{width:'200px',background:'transparent',border:'1px solid transparent',color:'var(--text)'},onFocus:e=>e.target.style.borderColor='var(--accent)',onBlurCapture:e=>e.target.style.borderColor='transparent'})),
+            React.createElement('td',null,React.createElement('input',{type:'number',step:'0.01',defaultValue:i.costPerCase,onBlur:e=>update(i.code,'costPerCase',e.target.value)})),
+            React.createElement('td',null,React.createElement('input',{type:'number',step:'1',defaultValue:i.unitsInCase,onBlur:e=>update(i.code,'unitsInCase',e.target.value)})),
+            React.createElement('td',{style:{color:'var(--accent)',fontWeight:600}},fmt(i.costPerUnit)),
+            React.createElement('td',null,React.createElement('button',{className:'btn btn-danger btn-sm',onClick:()=>remove(i.code)},'\u2715'))
+          )
+        ))
+      )
+    )
+  );
+}
+
+// ========== SALES ==========
+function Sales({sales,reload}){
+  const cols=['vCh','vGra','v24','v20','v16','vNieve','charolas','cheetos','conchitas','sopas','vSopas','doritos','hotCup','redBull','tostitos','takis'];
+  const colLabels=['V-ch','V-Gra','V-24oz','V-20oz','V-16oz','V-Nieve','Charolas','Cheetos','Conchitas','Sopas','V-Sopas','Doritos','Hot Cup','Red Bull','Tostitos','Takis'];
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const[newEntry,setNewEntry]=useState(()=>{
+    const t=new Date();const y=t.getFullYear();const m=String(t.getMonth()+1).padStart(2,'0');const d=String(t.getDate()).padStart(2,'0');
+    const base={date:`${y}-${m}-${d}`,day:days[t.getDay()]};
+    cols.forEach(c=>base[c]=0);return base;
+  });
+
+  const addEntry=async()=>{
+    await api.post('/api/sales',newEntry);
+    showToast('Sales entry saved!');
+    const t=new Date();const y=t.getFullYear();const m=String(t.getMonth()+1).padStart(2,'0');const d=String(t.getDate()).padStart(2,'0');
+    const base={date:`${y}-${m}-${d}`,day:days[t.getDay()]};cols.forEach(c=>base[c]=0);setNewEntry(base);
+    reload();
+  };
+  const removeEntry=async(id)=>{if(!confirm('Delete entry?'))return;await api.del('/api/sales/'+id);showToast('Deleted');reload()};
+  const updateNew=(field,val)=>{
+    setNewEntry(prev=>{
+      const u={...prev,[field]:cols.includes(field)?Number(val):val};
+      if(field==='date'){const dt=new Date(val+'T12:00:00');u.day=days[dt.getDay()]}
+      return u;
+    });
+  };
+  const totals={};cols.forEach(c=>{totals[c]=sales.reduce((s,e)=>s+(e[c]||0),0)});
+  const totalAll=Object.values(totals).reduce((s,v)=>s+v,0);
+
+  return React.createElement('div',null,
+    React.createElement('h1',{className:'page-title'},'\u{1F4B0} Sales Entry'),
+    React.createElement('div',{style:{background:'var(--card)',borderRadius:'10px',border:'1px solid var(--border)',padding:'1rem',marginBottom:'1rem'}},
+      React.createElement('h3',{style:{fontSize:'0.9rem',marginBottom:'0.75rem',color:'var(--accent)'}},'Add New Entry'),
+      React.createElement('div',{className:'form-row'},
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'Date'),React.createElement('input',{type:'date',value:newEntry.date,onChange:e=>updateNew('date',e.target.value)})),
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'Day'),React.createElement('span',{style:{padding:'0.45rem 0',fontSize:'0.85rem',fontWeight:600}},newEntry.day)),
+        ...cols.map((c,i)=>React.createElement('div',{key:c,className:'form-group'},React.createElement('label',null,colLabels[i]),React.createElement('input',{type:'number',min:0,value:newEntry[c],onChange:e=>updateNew(c,e.target.value),style:{width:'55px'}}))),
+        React.createElement('button',{className:'btn btn-primary',onClick:addEntry,style:{alignSelf:'end'}},'\u2713 Save')
+      )
+    ),
+    React.createElement('div',{className:'cards-row',style:{gridTemplateColumns:'repeat(4,1fr)'}},
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Total Units Sold'),React.createElement('div',{className:'value'},totalAll.toLocaleString())),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Days Recorded'),React.createElement('div',{className:'value'},sales.length)),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Avg Units/Day'),React.createElement('div',{className:'value'},sales.length>0?(totalAll/sales.length).toFixed(0):'0')),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Top Container'),React.createElement('div',{className:'value',style:{fontSize:'1rem'}},colLabels[cols.indexOf(Object.keys(totals).reduce((a,b)=>totals[a]>totals[b]?a:b))]))
+    ),
+    React.createElement('div',{className:'table-wrap'},
+      React.createElement('table',null,
+        React.createElement('thead',null,React.createElement('tr',null,
+          React.createElement('th',null,'Date'),React.createElement('th',null,'Day'),
+          ...colLabels.map(h=>React.createElement('th',{key:h},h)),
+          React.createElement('th',null,'Total'),React.createElement('th',null,'')
+        )),
+        React.createElement('tbody',null,
+          ...[...sales].reverse().map((e,idx)=>{
+            const rowTotal=cols.reduce((s,c)=>s+(e[c]||0),0);
+            return React.createElement('tr',{key:e.id||idx},
+              React.createElement('td',null,e.date),React.createElement('td',null,e.day),
+              ...cols.map(c=>React.createElement('td',{key:c},e[c]||0)),
+              React.createElement('td',{style:{fontWeight:700}},rowTotal),
+              React.createElement('td',null,React.createElement('button',{className:'btn btn-danger btn-sm',onClick:()=>removeEntry(e.id)},'\u2715'))
+            );
+          }),
+          React.createElement('tr',{style:{fontWeight:700,background:'var(--card2)'}},
+            React.createElement('td',{colSpan:2},'TOTALS'),
+            ...cols.map(c=>React.createElement('td',{key:c},totals[c])),
+            React.createElement('td',null,totalAll),React.createElement('td',null,'')
+          )
+        )
+      )
+    )
+  );
+}
+
+// ========== OVERHEAD ==========
+function Overhead({overhead,reload,totalOverhead,totalUnits,overheadPerUnit}){
+  const[local,setLocal]=useState(overhead);
+  useEffect(()=>setLocal(overhead),[overhead]);
+  const save=async()=>{await api.put('/api/overhead',local);showToast('Overhead saved!');reload()};
+  const entries=[['rent','Rent'],['labor','Labor'],['utilities','Utilities'],['insurance','Insurance']];
+  return React.createElement('div',null,
+    React.createElement('h1',{className:'page-title'},'\u2699\uFE0F Monthly Overhead'),
+    React.createElement('div',{className:'cards-row',style:{gridTemplateColumns:'repeat(3,1fr)'}},
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Total Overhead'),React.createElement('div',{className:'value'},fmt(totalOverhead))),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Total Units/Month'),React.createElement('div',{className:'value'},totalUnits.toLocaleString())),
+      React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'label'},'Overhead per Unit'),React.createElement('div',{className:'value'},fmt(overheadPerUnit)))
+    ),
+    React.createElement('div',{style:{background:'var(--card)',borderRadius:'10px',border:'1px solid var(--border)',padding:'1.5rem',maxWidth:'500px'}},
+      ...entries.map(([k,label])=>
+        React.createElement('div',{key:k,className:'form-row',style:{marginBottom:'0.75rem'}},
+          React.createElement('div',{className:'form-group',style:{flex:1}},
+            React.createElement('label',null,label),
+            React.createElement('input',{type:'number',step:'0.01',value:local[k]||0,onChange:e=>setLocal(p=>({...p,[k]:Number(e.target.value)})),style:{width:'100%'}})
+          )
+        )
+      ),
+      React.createElement('button',{className:'btn btn-primary',onClick:save,style:{marginTop:'0.5rem'}},'\u2713 Save Overhead'),
+      React.createElement('div',{style:{padding:'0.75rem',background:'var(--card2)',borderRadius:'8px',marginTop:'0.75rem'}},
+        React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontWeight:700,fontSize:'1rem'}},
+          React.createElement('span',null,'TOTAL:'),React.createElement('span',{style:{color:'var(--accent)'}},fmt(Object.values(local).reduce((s,v)=>s+(Number(v)||0),0))))
+      ),
+      React.createElement('p',{style:{fontSize:'0.75rem',color:'var(--text2)',marginTop:'0.75rem'}},'Overhead is divided equally across all units sold per month.')
+    )
+  );
+}
+
+// ========== REPORTS ==========
+function Reports({products,sales,totalOverhead}){
+  const[reportType,setReportType]=useState('profitability');
+  const chartRef=useRef(null);const chartInst=useRef(null);
+
+  const totalRevenue=products.reduce((s,p)=>s+p.sellPrice*p.unitsPerMonth,0);
+  const totalIngCost=products.reduce((s,p)=>s+p.ingCost*p.unitsPerMonth,0);
+  const totalPkgCost=products.reduce((s,p)=>s+p.pkgCost*p.unitsPerMonth,0);
+  const totalProfit=totalRevenue-totalIngCost-totalPkgCost-totalOverhead;
+
+  useEffect(()=>{
+    if(!chartRef.current)return;
+    if(chartInst.current)chartInst.current.destroy();
+    if(reportType==='profitability'){
+      chartInst.current=new Chart(chartRef.current,{type:'doughnut',data:{
+        labels:['Ingredients','Packaging','Overhead','Profit'],
+        datasets:[{data:[totalIngCost.toFixed(2),totalPkgCost.toFixed(2),totalOverhead.toFixed(2),Math.max(0,totalProfit).toFixed(2)],
+        backgroundColor:['#ef4444','#3b82f6','#8b5cf6','#22c55e']}]
+      },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}}}});
+    }else if(reportType==='sales'){
+      const byDay={};sales.forEach(e=>{
+        const total=['vCh','vGra','v24','v20','v16','vNieve','charolas','cheetos','conchitas','sopas','vSopas','doritos','hotCup','redBull','tostitos','takis'].reduce((s,c)=>s+(e[c]||0),0);
+        if(!byDay[e.day])byDay[e.day]={total:0,count:0};byDay[e.day].total+=total;byDay[e.day].count++;
+      });
+      const dayOrder=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const labels=dayOrder.filter(d=>byDay[d]);
+      chartInst.current=new Chart(chartRef.current,{type:'bar',data:{
+        labels,datasets:[{label:'Avg Units/Day',data:labels.map(d=>byDay[d]?(byDay[d].total/byDay[d].count).toFixed(1):0),backgroundColor:'rgba(245,158,11,.7)',borderRadius:4}]
+      },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(71,85,105,.3)'}},x:{ticks:{color:'#94a3b8'},grid:{display:false}}}}});
+    }else{
+      const sorted=[...products].sort((a,b)=>b.totalCost-a.totalCost);
+      chartInst.current=new Chart(chartRef.current,{type:'bar',data:{
+        labels:sorted.map(p=>p.name),
+        datasets:[{label:'Ingredients',data:sorted.map(p=>p.ingCost.toFixed(2)),backgroundColor:'#ef4444'},{label:'Packaging',data:sorted.map(p=>p.pkgCost.toFixed(2)),backgroundColor:'#3b82f6'},{label:'Overhead',data:sorted.map(p=>p.overheadPerUnit.toFixed(2)),backgroundColor:'#8b5cf6'}]
+      },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{stacked:true,ticks:{color:'#94a3b8',maxRotation:45},grid:{display:false}},y:{stacked:true,ticks:{callback:v=>'$'+v,color:'#94a3b8'},grid:{color:'rgba(71,85,105,.3)'}}}}});
+    }
+  },[reportType,products,sales,totalOverhead]);
+
+  return React.createElement('div',null,
+    React.createElement('h1',{className:'page-title'},'\u{1F4CB} Reports'),
+    React.createElement('div',{className:'tab-bar'},
+      ...['profitability','sales','cost'].map(t=>
+        React.createElement('div',{key:t,className:'tab'+(reportType===t?' active':''),onClick:()=>setReportType(t)},
+          t==='profitability'?'Revenue Breakdown':t==='sales'?'Sales by Day':'Cost Breakdown')
+      )
+    ),
+    React.createElement('div',{className:'grid-2'},
+      React.createElement('div',{className:'chart-container'},
+        React.createElement('h3',null,reportType==='profitability'?'Monthly Revenue Breakdown':reportType==='sales'?'Avg Units Sold by Day of Week':'Cost Breakdown by Product'),
+        React.createElement('div',{style:{height:'350px'}},React.createElement('canvas',{ref:chartRef}))
+      ),
+      React.createElement('div',null,
+        reportType==='profitability'&&React.createElement('div',{className:'stat-card',style:{marginBottom:'1rem'}},
+          React.createElement('h3',{style:{fontSize:'0.85rem',color:'var(--text2)',marginBottom:'0.75rem'}},'Monthly P&L Summary'),
+          ...[['Revenue',totalRevenue,''],['Ingredient Cost',totalIngCost,'negative'],['Packaging Cost',totalPkgCost,'negative'],['Overhead',totalOverhead,'negative']].map(([l,v,c])=>
+            React.createElement('div',{key:l,style:{display:'flex',justifyContent:'space-between',padding:'0.35rem 0',fontSize:'0.85rem'}},React.createElement('span',null,l),React.createElement('span',{className:c},fmt(v)))
+          ),
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between',padding:'0.5rem 0',fontSize:'1.1rem',fontWeight:700,borderTop:'2px solid var(--border)',marginTop:'0.25rem'}},
+            React.createElement('span',null,'NET PROFIT'),React.createElement('span',{className:totalProfit>=0?'positive':'negative'},fmt(totalProfit))),
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.85rem'}},
+            React.createElement('span',null,'Net Margin'),React.createElement('span',null,fmtPct(totalRevenue>0?totalProfit/totalRevenue:0)))
+        ),
+        React.createElement('div',{className:'table-wrap',style:{maxHeight:'350px'}},
+          React.createElement('table',null,
+            React.createElement('thead',null,React.createElement('tr',null,...(reportType==='sales'?['Date','Day','Total']:reportType==='cost'?['Product','Ing','Pkg','OH','Total','Price','Margin']:['Product','Revenue/Mo','Profit/Mo']).map(h=>React.createElement('th',{key:h},h)))),
+            React.createElement('tbody',null,
+              reportType==='profitability'&&[...products].sort((a,b)=>(b.profit*b.unitsPerMonth)-(a.profit*a.unitsPerMonth)).map(p=>
+                React.createElement('tr',{key:p.id},React.createElement('td',null,p.name),React.createElement('td',null,fmt(p.sellPrice*p.unitsPerMonth)),React.createElement('td',{className:p.profit>=0?'positive':'negative'},fmt(p.profit*p.unitsPerMonth)))
+              ),
+              reportType==='sales'&&[...sales].reverse().slice(0,20).map((e,i)=>{
+                const total=['vCh','vGra','v24','v20','v16','vNieve','charolas','cheetos','conchitas','sopas','vSopas','doritos','hotCup','redBull','tostitos','takis'].reduce((s,c)=>s+(e[c]||0),0);
+                return React.createElement('tr',{key:i},React.createElement('td',null,e.date),React.createElement('td',null,e.day),React.createElement('td',{style:{fontWeight:700}},total));
+              }),
+              reportType==='cost'&&[...products].sort((a,b)=>b.totalCost-a.totalCost).map(p=>
+                React.createElement('tr',{key:p.id},React.createElement('td',null,p.name),React.createElement('td',null,fmt(p.ingCost)),React.createElement('td',null,fmt(p.pkgCost)),React.createElement('td',null,fmt(p.overheadPerUnit)),React.createElement('td',{style:{fontWeight:700}},fmt(p.totalCost)),React.createElement('td',null,fmt(p.sellPrice)),
+                  React.createElement('td',null,React.createElement('span',{className:'badge '+(p.margin>=0.3?'badge-green':p.margin>=0?'badge-blue':'badge-red')},fmtPct(p.margin))))
+              )
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
