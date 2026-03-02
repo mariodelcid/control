@@ -6,9 +6,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // PostgreSQL connection - Railway sets DATABASE_URL automatically
+if (!process.env.DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL environment variable is not set.');
+  console.error('In Railway: link your PostgreSQL service or set DATABASE_URL manually.');
+  process.exit(1);
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('railway') ? { rejectUnauthorized: false } : false
+  ssl: process.env.DATABASE_URL.includes('railway') ? { rejectUnauthorized: false } : false
 });
 
 // Initialize tables
