@@ -72,7 +72,7 @@ input[type="number"]{width:80px}
 .autocomplete-list.open{display:block}
 .autocomplete-list div{padding:0.4rem 0.65rem;font-size:0.78rem;cursor:pointer;display:flex;justify-content:space-between}
 .autocomplete-list div:hover,.autocomplete-list div.highlighted{background:rgba(245,158,11,.15);color:var(--accent)}
-.hamburger{display:none;position:fixed;top:0.75rem;left:0.75rem;z-index:200;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.55rem;cursor:pointer;flex-direction:column;gap:5px;align-items:center;justify-content:center}.hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:all .3s}.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9;backdrop-filter:blur(2px)}.sidebar{transition:transform .25s ease}@media(max-width:768px){.hamburger{display:flex}.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay{display:block}.main{margin-left:0;padding:1rem}.grid-2{grid-template-columns:1fr}.cards-row{grid-template-columns:1fr 1fr}}</style>
+@media(max-width:768px){.sidebar{width:100%;height:auto;position:fixed;top:0;left:0;right:0;flex-direction:row;flex-wrap:wrap;align-items:center;z-index:100;border-right:none;border-bottom:1px solid var(--border);padding:0}.sidebar .logo{padding:0.5rem 1rem;border-bottom:none;margin-bottom:0;border-right:1px solid var(--border)}.sidebar .logo h2{font-size:0.9rem}.sidebar .logo span{display:none}.nav-item{padding:0.5rem 0.75rem;border-left:none;border-bottom:3px solid transparent;font-size:0.78rem}.nav-item.active{border-bottom-color:var(--accent);border-left-color:transparent}.main{margin-left:0;margin-top:56px;padding:1rem}.grid-2{grid-template-columns:1fr}.cards-row{grid-template-columns:1fr 1fr}}</style>
 </head>
 <body>
 <div id="root"></div>
@@ -96,7 +96,6 @@ function showToast(msg,isError){
 }
 function App(){
   const[page,setPage]=useState('dashboard');
-  const[menuOpen,setMenuOpen]=useState(false);
   const[ingredients,setIngredients]=useState([]);
   const[packaging,setPackaging]=useState([]);
   const[products,setProducts]=useState([]);
@@ -130,15 +129,14 @@ function App(){
   if(loading)return React.createElement('div',{className:'loading'},'Loading Elotes Locos...');
   return React.createElement('div',{className:'app'},
     React.createElement('div',{id:'toast',className:'toast',style:{display:'none'}}),
-    React.createElement('button',{className:'hamburger','aria-label':'Menu',onClick:()=>setMenuOpen(o=>!o)},React.createElement('span'),React.createElement('span'),React.createElement('span')),
-    React.createElement('div',{className:'overlay',onClick:()=>setMenuOpen(false)}),
-    React.createElement('nav',{className:'sidebar'+(menuOpen?' open':'')},
+    
+    React.createElement('nav',{className:'sidebar'},
       React.createElement('div',{className:'logo'},
         React.createElement('h2',null,'\u{1F33D} Elotes Locos'),
         React.createElement('span',null,'Cost Manager')
       ),
       ...Object.entries(pages).map(([k,v])=>
-        React.createElement('div',{key:k,className:'nav-item'+(page===k?' active':''),onClick:()=>{setPage(k);setMenuOpen(false)}},
+        React.createElement('div',{key:k,className:'nav-item'+(page===k?' active':''),onClick:()=>setPage(k)},
           React.createElement('span',{className:'nav-label'},v)
         )
       )
